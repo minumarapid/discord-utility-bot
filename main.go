@@ -42,7 +42,7 @@ func LoadEnabledChannels(db *gorm.DB) (*ChannelRegistry, error) {
 	return registry, nil
 }
 
-func mai() {
+func main() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
