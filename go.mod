@@ -6,7 +6,7 @@ require (
 	github.com/bwmarrin/discordgo v0.29.0
 	github.com/glebarez/sqlite v1.11.0
 	github.com/joho/godotenv v1.5.1
-	github.com/minumarapid/discord-go-router v0.3.2
+	github.com/minumarapid/discord-go-router v0.3.3
 	gorm.io/gorm v1.31.1
 )
 

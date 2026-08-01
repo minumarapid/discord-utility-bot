@@ -1,5 +1,5 @@
 .env
-sqlite.db
+*.db
 *.db
 *.exe
 .idea
