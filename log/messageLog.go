@@ -195,6 +195,10 @@ func MessageLog(bot *dgr.Dgr, db *gorm.DB) {
 			return
 		}
 
+		if m.Content == cache.Content {
+			return
+		}
+
 		guildConfig, ok := msgLogReg.GuildConfig.Load(m.GuildID)
 		if !ok {
 			return
