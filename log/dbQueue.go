@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type MsgCacheJob[T any] struct {
@@ -12,13 +13,13 @@ type MsgCacheJob[T any] struct {
 }
 
 type DBCacheQueue[T any] struct {
-	ch chan T
+	ch      chan T
 	onFlush func([]T)
 }
 
 func NewDBCacheQueue[T any](db *gorm.DB, bufferSize int, batchSize int, onFlush func([]T)) *DBCacheQueue[T] {
 	q := &DBCacheQueue[T]{
-		ch: make(chan T, bufferSize),
+		ch:      make(chan T, bufferSize),
 		onFlush: onFlush,
 	}
 
@@ -31,7 +32,9 @@ func NewDBCacheQueue[T any](db *gorm.DB, bufferSize int, batchSize int, onFlush 
 			if len(buffer) == 0 {
 				return
 			}
-			if err := db.Create(&buffer).Error; err != nil {
+			if err := db.Clauses(clause.OnConflict{
+				UpdateAll: true,
+			}).Create(&buffer).Error; err != nil {
 				log.Println("Failed to bulk insert cache:", err)
 			} else {
 				q.onFlush(buffer)

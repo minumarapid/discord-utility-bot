@@ -104,8 +104,8 @@ func MessageLog(bot *dgr.Dgr, db *gorm.DB) {
 	msgQueue := NewDBCacheQueue[msgLogCache](db, 1000, 100,
 		func(caches []msgLogCache) {
 			for _, item := range caches {
-        msgLogReg.MsgLogCache.Delete(item.MessageID)
-    	}
+				msgLogReg.MsgLogCache.Delete(item.MessageID)
+			}
 		})
 	dgr.RegMsgCreate(bot, []string{"*"}, func(c *dgr.MsgCreateCtx) {
 		if c.Args.Author.Bot {
@@ -318,9 +318,7 @@ func MessageLog(bot *dgr.Dgr, db *gorm.DB) {
 
 		msgLogReg.MsgLogCache.Store(m.ID, logCacheData)
 
-		err = db.Clauses(clause.OnConflict{
-			UpdateAll: true,
-		}).Create(&logCacheData).Error
+		msgQueue.Push(logCacheData)
 
 		if config.LogChannel != "" {
 			_, err := s.ChannelMessageSendEmbed(config.LogChannel, embed)
