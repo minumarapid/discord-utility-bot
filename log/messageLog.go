@@ -24,6 +24,7 @@ type msgLogChannelSetting struct {
 type messageLogChannelRegistry struct {
 	DisableChannel sync.Map // key: channelID string, value: guildID string ヒットしたらdisable
 	GuildConfig    sync.Map // key: guildID string, value: messageLogGuildConfig
+	MsgLogCache    sync.Map // key: messageID string, value: msgLogCache
 }
 
 type LogGuildConfig uint8
@@ -114,13 +115,17 @@ func MessageLog(bot *dgr.Dgr, db *gorm.DB) {
 			return
 		}
 
-		msgQueue.Push(msgLogCache{
+		logCacheData := msgLogCache{
 			MessageID: c.Args.ID,
 			Content:   c.Args.Content,
 			AuthorID:  c.Args.Author.ID,
 			ChannelID: c.Args.ChannelID,
 			CreatedAt: c.Args.Timestamp,
-		})
+		}
+
+		msgLogReg.MsgLogCache.Store(c.Args.ID, logCacheData)
+
+		msgQueue.Push(logCacheData)
 	})
 
 	bot.Session.AddHandler(func(s *discordgo.Session, m *discordgo.MessageDelete) {
@@ -186,6 +191,8 @@ func MessageLog(bot *dgr.Dgr, db *gorm.DB) {
 			},
 			Timestamp: time.Now().Format(time.RFC3339),
 		}
+
+		msgLogReg.MsgLogCache.Delete(m.ID)
 
 		db.Model(&msgLogCache{}).
 			Where("message_id = ?", m.ID).
@@ -274,15 +281,19 @@ func MessageLog(bot *dgr.Dgr, db *gorm.DB) {
 			Timestamp: time.Now().Format(time.RFC3339),
 		}
 
-		err = db.Clauses(clause.OnConflict{
-			UpdateAll: true,
-		}).Create(&msgLogCache{
+		logCacheData := msgLogCache{
 			MessageID: m.ID,
 			Content:   m.Content,
 			AuthorID:  m.Author.ID,
 			ChannelID: m.ChannelID,
 			CreatedAt: m.Timestamp,
-		}).Error
+		}
+
+		msgLogReg.MsgLogCache.Store(m.ID, logCacheData)
+
+		err = db.Clauses(clause.OnConflict{
+			UpdateAll: true,
+		}).Create(&logCacheData).Error
 
 		if config.LogChannel != "" {
 			_, err := s.ChannelMessageSendEmbed(config.LogChannel, embed)
