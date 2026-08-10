@@ -13,11 +13,13 @@ type MsgCacheJob[T any] struct {
 
 type DBCacheQueue[T any] struct {
 	ch chan T
+	onFlush func([]T)
 }
 
-func NewDBCacheQueue[T any](db *gorm.DB, bufferSize int, batchSize int) *DBCacheQueue[T] {
+func NewDBCacheQueue[T any](db *gorm.DB, bufferSize int, batchSize int, onFlush func([]T)) *DBCacheQueue[T] {
 	q := &DBCacheQueue[T]{
 		ch: make(chan T, bufferSize),
+		onFlush: onFlush,
 	}
 
 	go func() {
@@ -31,8 +33,10 @@ func NewDBCacheQueue[T any](db *gorm.DB, bufferSize int, batchSize int) *DBCache
 			}
 			if err := db.Create(&buffer).Error; err != nil {
 				log.Println("Failed to bulk insert cache:", err)
+			} else {
+				q.onFlush(buffer)
+				buffer = buffer[:0]
 			}
-			buffer = buffer[:0]
 		}
 
 		for {

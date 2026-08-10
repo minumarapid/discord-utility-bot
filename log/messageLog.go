@@ -101,7 +101,12 @@ func MessageLog(bot *dgr.Dgr, db *gorm.DB) {
 		log.Fatal("failed to load enabled channels from database:", err)
 	}
 
-	msgQueue := NewDBCacheQueue[msgLogCache](db, 1000, 100)
+	msgQueue := NewDBCacheQueue[msgLogCache](db, 1000, 100,
+		func(caches []msgLogCache) {
+			for _, item := range caches {
+        msgLogReg.MsgLogCache.Delete(item.MessageID)
+    	}
+		})
 	dgr.RegMsgCreate(bot, []string{"*"}, func(c *dgr.MsgCreateCtx) {
 		if c.Args.Author.Bot {
 			return
