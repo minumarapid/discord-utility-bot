@@ -148,6 +148,10 @@ func MessageLog(bot *dgr.Dgr, db *gorm.DB) {
 
 		content = strings.Join(contentLine, "\n")
 
+		if r := []rune(content); len(r) > 1024 {
+			content = string(r[:1021]) + "..."
+		}
+
 		var embedAuthor *discordgo.MessageEmbedAuthor
 
 		user, err := s.User(cache.AuthorID)
@@ -229,6 +233,13 @@ func MessageLog(bot *dgr.Dgr, db *gorm.DB) {
 			contentLine = append(contentLine, fmt.Sprintf("> %s", line))
 		}
 		content = strings.Join(contentLine, "\n")
+
+		if r := []rune(prevContent); len(r) > 1024 {
+			prevContent = string(r[:1021]) + "..."
+		}
+		if r := []rune(content); len(r) > 1024 {
+			content = string(r[:1021]) + "..."
+		}
 
 		embed := &discordgo.MessageEmbed{
 			Author: &discordgo.MessageEmbedAuthor{
