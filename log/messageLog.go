@@ -134,9 +134,20 @@ func MessageLog(bot *dgr.Dgr, db *gorm.DB) {
 		}
 
 		var cache msgLogCache
-		err := db.Model(&msgLogCache{}).Where("message_id = ?", m.ID).First(&cache).Error
-		if err != nil {
-			return
+		value, ok := msgLogReg.MsgLogCache.Load(m.ID)
+
+		if ok {
+			var castOK bool
+			cache, castOK = value.(msgLogCache)
+			if !castOK {
+				return
+			}
+		} else {
+			if err := db.
+				Where("message_id = ?", m.ID).
+				First(&cache).Error; err != nil {
+				return
+			}
 		}
 
 		guildConfig, ok := msgLogReg.GuildConfig.Load(m.GuildID)
@@ -212,9 +223,20 @@ func MessageLog(bot *dgr.Dgr, db *gorm.DB) {
 		}
 
 		var cache msgLogCache
-		err := db.Model(&msgLogCache{}).Where("message_id = ?", m.ID).First(&cache).Error
-		if err != nil {
-			return
+		value, ok := msgLogReg.MsgLogCache.Load(m.ID)
+
+		if ok {
+			var castOK bool
+			cache, castOK = value.(msgLogCache)
+			if !castOK {
+				return
+			}
+		} else {
+			if err := db.
+				Where("message_id = ?", m.ID).
+				First(&cache).Error; err != nil {
+				return
+			}
 		}
 
 		if m.Content == cache.Content {
