@@ -148,17 +148,19 @@ func MessageLog(bot *dgr.Dgr, db *gorm.DB) {
 
 		content = strings.Join(contentLine, "\n")
 
+		var embedAuthor *discordgo.MessageEmbedAuthor
+
 		user, err := s.User(cache.AuthorID)
 
-		if err != nil {
-			log.Println("Error fetching user:", err)
+		if err == nil {
+			embedAuthor = &discordgo.MessageEmbedAuthor{
+				Name:    user.Username,
+				IconURL: user.AvatarURL(""),
+			}
 		}
 
 		embed := &discordgo.MessageEmbed{
-			Author: &discordgo.MessageEmbedAuthor{
-				Name:    user.Username,
-				IconURL: user.AvatarURL(""),
-			},
+			Author:      embedAuthor,
 			Description: fmt.Sprintf("**<@%s> が <#%s> で送信したメッセージが削除されました。**", cache.AuthorID, cache.ChannelID),
 			Color:       0xFF0000,
 			Fields: []*discordgo.MessageEmbedField{
