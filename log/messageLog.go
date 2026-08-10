@@ -111,7 +111,7 @@ func MessageLog(bot *dgr.Dgr, db *gorm.DB) {
 			return
 		}
 		config := guildConfig.(msgLogGuildSettingConfig)
-		if config.Config&GlConfigDelete == 0 || config.Config&GlConfigEdit == 0 {
+		if config.Config&GlConfigDelete == 0 && config.Config&GlConfigEdit == 0 {
 			return
 		}
 
