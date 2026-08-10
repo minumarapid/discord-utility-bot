@@ -24,7 +24,7 @@ func main() {
 		log.Fatal("Error creating bot instance")
 	}
 	
-	bot.Session.Identify.Intents = discordgo.IntentsGuildMessages | discordgo.IntentMessageContent
+	bot.Session.Identify.Intents |= discordgo.IntentsGuildMessages | discordgo.IntentMessageContent
 
 	db, err := gorm.Open(sqlite.Open("sqlite.db"), &gorm.Config{})
 	if err != nil {
