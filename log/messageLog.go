@@ -105,6 +105,15 @@ func MessageLog(bot *dgr.Dgr, db *gorm.DB) {
 		if c.Args.Author.Bot {
 			return
 		}
+		guildConfig, ok := msgLogReg.GuildConfig.Load(c.Args.GuildID)
+		if !ok {
+			return
+		}
+		config := guildConfig.(msgLogGuildSettingConfig)
+		if config.Config&GlConfigDelete == 0 {
+			return
+		}
+
 		msgQueue.Push(msgLogCache{
 			MessageID: c.Args.ID,
 			Content:   c.Args.Content,
