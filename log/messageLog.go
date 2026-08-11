@@ -95,6 +95,24 @@ func MessageLog(bot *dgr.Dgr, db *gorm.DB) {
 		&msgLogGuildSetting{},
 	)
 
+	go func() {
+		cleanup := func() {
+			retentionPeriod := time.Now().AddDate(0, 0, -30)
+			if err := db.Where("created_at < ?", retentionPeriod).Delete(&msgLogCache{}).Error; err != nil {
+				log.Println("Failed to clean up old message cache:", err)
+			} else {
+				log.Println("Successfully cleaned up old message cache")
+			}
+		}
+		cleanup()
+		ticker := time.NewTicker(24 * time.Hour)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			cleanup()
+		}
+	}()
+
 	msgLogReg, err := messageLogLoadDisabledChannels(db)
 
 	if err != nil {
