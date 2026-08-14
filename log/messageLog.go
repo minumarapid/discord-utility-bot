@@ -80,7 +80,7 @@ type msgLogCache struct {
 	Content   string
 	AuthorID  string
 	ChannelID string
-	CreatedAt time.Time
+	CreatedAt time.Time `gorm:"index"`
 }
 
 func isAdmin[T any](c *dgr.Context[T]) bool {
