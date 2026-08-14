@@ -98,10 +98,14 @@ func MessageLog(bot *dgr.Dgr, db *gorm.DB) {
 	go func() {
 		cleanup := func() {
 			retentionPeriod := time.Now().AddDate(0, 0, -30)
-			if err := db.Where("created_at < ?", retentionPeriod).Delete(&msgLogCache{}).Error; err != nil {
-				log.Println("Failed to clean up old message cache:", err)
+			result := db.
+				Where("created_at < ?", retentionPeriod).
+				Delete(&msgLogCache{})
+
+			if result.Error != nil {
+				log.Println("Failed to clean up old message cache:", result.Error)
 			} else {
-				log.Println("Successfully cleaned up old message cache")
+				log.Printf("Successfully cleaned up %d old message cache record(s)", result.RowsAffected)
 			}
 		}
 		cleanup()
