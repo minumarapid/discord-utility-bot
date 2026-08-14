@@ -80,7 +80,7 @@ type msgLogCache struct {
 	Content   string
 	AuthorID  string
 	ChannelID string
-	CreatedAt time.Time
+	CreatedAt time.Time `gorm:"index"`
 }
 
 func isAdmin[T any](c *dgr.Context[T]) bool {
@@ -94,6 +94,28 @@ func MessageLog(bot *dgr.Dgr, db *gorm.DB) {
 		&msgLogCache{},
 		&msgLogGuildSetting{},
 	)
+
+	go func() {
+		cleanup := func() {
+			retentionPeriod := time.Now().AddDate(0, 0, -30)
+			result := db.
+				Where("created_at < ?", retentionPeriod).
+				Delete(&msgLogCache{})
+
+			if result.Error != nil {
+				log.Println("Failed to clean up old message cache:", result.Error)
+			} else {
+				log.Printf("Successfully cleaned up %d old message cache record(s)", result.RowsAffected)
+			}
+		}
+		cleanup()
+		ticker := time.NewTicker(24 * time.Hour)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			cleanup()
+		}
+	}()
 
 	msgLogReg, err := messageLogLoadDisabledChannels(db)
 
