@@ -1,13 +1,16 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/glebarez/sqlite"
 	"github.com/joho/godotenv"
 	dgr "github.com/minumarapid/discord-go-router"
+	"github.com/minumarapid/discord-utility-bot/heartbeat"
 	msglog "github.com/minumarapid/discord-utility-bot/log"
 	"gorm.io/gorm"
 )
@@ -23,13 +26,15 @@ func main() {
 	if err != nil {
 		log.Fatal("Error creating bot instance")
 	}
-	
+
 	bot.Session.Identify.Intents |= discordgo.IntentsGuildMessages | discordgo.IntentMessageContent
 
 	db, err := gorm.Open(sqlite.Open("sqlite.db"), &gorm.Config{})
 	if err != nil {
 		log.Fatal("failed to connect database")
 	}
+
+	go heartbeat.Heartbeat(context.Background(), os.Getenv("HEARTBEAT_URL"), time.Minute)
 
 	threadpin(bot)
 
